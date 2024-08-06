@@ -49,7 +49,9 @@ We used a dataset from Kaggle, which presents the information in its raw form wi
 2. **Hover Over Bubbles**: View detailed information in the tooltip.
 3. **Explore Bar Chart**: Analyze the birth rate for each education level by hovering over a bubble.
 
-![Visualization Example](pictures/visualization_example.jpg)
+
+## Visualization picture:
+![Visualization Example](usaBirthsFinalProject/pictures/visualization_example.jpg)
 
 
 
