@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Births in the US by year, state, and education level of the mother 2016-2021</title>
+<style>
+
+ .header{
+            display: flex; 
+            align-items: center; 
+            justify-content: center;
+            flex-direction: column; 
+    }
+		
+    /* Style for the title */
+    h1 {
+            font-size: 32x; 
+            color: #193275; 
+            text-align: center; 
+            margin-top: 20px; 
+    }
+	
+	 .info {
+            text-align: center;
+			font-size: 18px;
+			color: #193275;
+			position: absolute;
+			top: 52px;
+			left: 620px;
+			
+        }
+    
+  #scatterPlot {
+    width: 800px;
+    height: 600px;
+    margin: 20px auto;
+	top: 0px;
+    left: 0px;
+    border: 1px solid #ccc;
+	position: absolute;
+	top: 200px;
+    left: 600px;
+  }
+
+  .dot {
+    position: absolute;
+    border-radius: 50%;
+    transition: all 0.3s ease-in-out;
+  }
+
+  .axis path,
+  .axis line {
+    fill: none;
+    stroke: #000;
+    shape-rendering: crispEdges;
+  }
+
+  .axis text {
+    font-family: sans-serif;
+    font-size: 12px;
+  }
+
+  .axis-title {
+    font-family: sans-serif;
+    font-size: 14px;
+  }
+  
+.state-img {
+  width: 30px;
+  height: auto;
+  margin-right: 10px;
+}
+
+.state-name {
+  font-weight: bold;
+}
+.legend {
+    position: absolute;
+	font-size: 12px;
+    top: 500px;
+    left: 250px;
+  }
+  .legend-title {
+    font-weight: bold;
+  }
+  
+#stateListContainer {
+  width: 200px;
+  height: 360px;
+  overflow-y: auto;
+  border: 1px solid #ccc;
+  position: absolute;
+  top: 500px; 
+  left: 10px; 
+}
+
+#stateList {
+  padding: 10px;
+}
+
+  .state-item {
+    display: flex; 
+    align-items: center;
+    margin-bottom: 10px; 
+  }
+
+  .state-item .state-image {
+    margin-right: 5px;
+  }
+  
+  .tooltip {
+            position: absolute;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 5px;
+            border-radius: 5px;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.1s ease-in; 
+        }
+	 .tooltip1 {
+            position: absolute;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 5px;
+            border-radius: 5px;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.1s ease-in; 
+        }
+		
+	.profile-img {
+        width: 100px;
+        height: auto; 
+        display: block;
+        margin: 0 auto 20px; 
+        border-radius: 50%;
+		position: absolute;
+		top: 100px;
+		left: 710px; 
+		
+    }
+	.year-selection {
+    position: absolute;
+    top: 175px;
+    left: 1000px;
+    background-color: #193275;
+    padding: 10px;
+}
+
+.year-selection label {
+    color: white;
+    font-weight: bold;
+}
+</style>
+</head>
+<body>
+<div class="header" >
+     <h1>Births in the US by year, state, and education level of the mother 2016-2021</h1>
+     <img src="pictures/icon.PNG" alt="Profile Picture" class="profile-img">
+</div>
+    <p class="info"> Dorin Bachar, Shir Cohen, Yeela Malka </p>
+</div>
+ <div class="year-selection">
+        <input type="radio" id="year2016" name="year" value="2016" checked>
+        <label for="year2016">2016</label>
+
+        <input type="radio" id="year2017" name="year" value="2017">
+        <label for="year2017">2017</label>
+
+        <input type="radio" id="year2018" name="year" value="2018">
+        <label for="year2018">2018</label>
+
+        <input type="radio" id="year2019" name="year" value="2019">
+        <label for="year2019">2019</label>
+
+        <input type="radio" id="year2020" name="year" value="2020">
+        <label for="year2020">2020</label>
+
+        <input type="radio" id="year2021" name="year" value="2021">
+        <label for="year2021">2021</label>
+    </div>
+
+<div id="scatterPlot"></div>
+<div id="stateListContainer">
+  <div id="stateList"></div>
+</div>
+  <div id="chart"></div>
+<svg class="legend" width="600" height="300"></svg>
+<script src="https://d3js.org/d3.v7.min.js"></script>
+
+<script>
+
+// Define scales for x-axis and y-axis globally
+const xScale = d3.scaleLinear();
+const yScale = d3.scaleLinear();
+
+function showStatePictures(data) {
+ const stateListContainer = d3.select('#stateListContainer'); // Change to #stateListContainer
+ const stateList = stateListContainer.select('#stateList');
+
+  // Load all states
+  const states = Array.from(new Set(data.map(row => row['State'])));
+
+  // Define the path to the pictures folder
+  const picturePath = 'pictures/';
+
+  // Append images and state names for each state
+  states.forEach(state => {
+    const imgPath = `${picturePath}${state}.png`;
+
+	  // Create a div element for each state's image and name
+    const stateItem = stateList.append("div")
+    .attr("class", "state-item");
+
+    // Create a div element for each state's image and name
+    const stateImage = stateItem.append("div") // Changed to stateItem
+      .attr("class", "state-image");
+
+    // Append the image to the div
+    stateImage.append("img")
+      .attr("class", "state-img")
+      .attr("src", imgPath)
+      .attr("alt", state);
+
+    // Append the state name to the div
+    stateItem.append("div")
+      .attr("class", "state-name")
+      .text(state);
+  });
+  
+}
+
+function createDictionary(){
+  const data = [
+    { "Education_Level_Code": 8, "Education Level of Mother": "Doctorate (PhD, EdD)" },
+    { "Education_Level_Code": 7, "Education Level of Mother": "Master's degree (MA, MS, MEng, MEd, MSW, MBA)" },
+    { "Education_Level_Code": 6, "Education Level of Mother": "Bachelor's degree (BA, AB, BS)" },
+    { "Education_Level_Code": 5, "Education Level of Mother": "Associate degree (AA, AS)" },
+    { "Education_Level_Code": 4, "Education Level of Mother": "Some college credit, but not a degree" },
+    { "Education_Level_Code": 3, "Education Level of Mother": "High school graduate or GED completed" },
+    { "Education_Level_Code": 2, "Education Level of Mother": "9th through 12th grade with no diploma" },
+    { "Education_Level_Code": 1, "Education Level of Mother": "8th grade or less" },
+    { "Education_Level_Code": 0, "Education Level of Mother": "Unknown or Not Stated" }
+  ];
+
+  // Create legend
+  const legend = d3.select(".legend")
+    .attr("class", "legend");
+
+  // Add legend frame
+  legend.append("rect")
+    .attr("width", 300)
+    .attr("height", 210)
+    .style("fill", "none")
+    .style("stroke", "black")
+    .style("stroke-width", 1);
+
+  // Add legend title
+  legend.append("text")
+    .attr("class", "legend-title")
+    .attr("x", 5)
+    .attr("y", 15)
+    .text("Education Level Code: Education Level of Mother")
+
+  // Add legend items
+  const legendItems = legend.selectAll(".legend-item")
+    .data(data)
+    .enter().append("g")
+    .attr("class", "legend-item")
+    .attr("transform", (d, i) => `translate(5, ${i * 20 + 30})`); // Adjust spacing as needed
+
+  // Add text
+  legendItems.append("text")
+    .attr("x", 15)
+    .attr("y", 10)
+    .text(d => `${d["Education_Level_Code"]}: ${d["Education Level of Mother"]}`);
+}
+
+
+function createAxisScatterPlot() {
+  const scatterPlot = document.getElementById('scatterPlot');
+  const svg = d3.select(scatterPlot).append("svg")
+    .attr("width", 1100)
+    .attr("height", 1100);
+	
+  const maxAge = 36;
+  const maxEducationLevel = 8; // the code level from 0 to 8
+
+  // Update scales domain based on maximum values
+  xScale.domain([0, maxAge]).range([50, 750]); // Adjust for better visualization
+  yScale.domain([0, maxEducationLevel]).range([550, 50]); // Adjust for better visualization
+
+
+  // Draw x-axis
+  svg.append("g")
+    .attr("class", "x-axis")
+    .attr("transform", "translate(0,550)") // Adjust for better visualization
+    .call(d3.axisBottom(xScale));
+  
+  // Draw y-axis
+  svg.append("g")
+    .attr("class", "y-axis")
+    .attr("transform", "translate(50,0)") // Adjust for better visualization
+    .call(d3.axisLeft(yScale));
+
+  // Add x-axis title
+  svg.append("text")
+    .attr("class", "axis-title")
+    .attr("x", 320) // Adjust position as needed
+    .attr("y", 590) // Adjust position as needed
+    .text("Average Age of Mother (years)");
+
+  // Add y-axis title
+  svg.append("text")
+    .attr("class", "axis-title")
+    .attr("transform", "rotate(-90)")
+    .attr("x", -420) // Adjust position as needed
+    .attr("y", 20) // Adjust position as needed
+    .text("Education Level with Maximum Number of Births");
+  
+}
+
+// Function to draw scatter plot and show bar chart in tooltip
+function drawDotInScatterPlot(data, year, state) {
+    const scatterPlot = document.getElementById('scatterPlot');
+    const svg = d3.select(scatterPlot).select('svg'); // Select existing SVG element
+    
+    // Filter data for the desired state and year
+    const filteredData = data.filter(row => row['State'] === state && row['Year'] === year);
+  
+    // Find education level with maximum number of births
+    const educationLevels = {};
+  
+    filteredData.forEach(d => {
+      const level = +d['Education_Level_Code'];
+      const births = +d['Number_of_Births'];
+      const age = +d['Average_Age_of_Mother'];
+  
+      if (educationLevels[level]) {
+        // Update the existing entry with the average age and sum up the number of births
+        educationLevels[level].totalBirths += births;
+        educationLevels[level].totalAge += age;
+        educationLevels[level].count++;
+      } else {
+        // Create a new entry with the average age and the number of births
+        educationLevels[level] = {
+          totalBirths: births,
+          totalAge: age,
+          count: 1
+        };
+      }
+    });
+  
+    // Calculate the average age and total number of births for each education level
+    for (const level in educationLevels) {
+      educationLevels[level].averageAge = educationLevels[level].totalAge / educationLevels[level].count;
+    }
+  
+    // Find the education level code with the maximum number of births
+    let maxBirthsLevelCode;
+    let maxTotalBirths = -Infinity;
+  
+    for (const levelCode in educationLevels) {
+      const totalBirths = educationLevels[levelCode].totalBirths;
+      if (totalBirths > maxTotalBirths) {
+        maxTotalBirths = totalBirths;
+        maxBirthsLevelCode = levelCode;
+      }
+    }
+  
+    // Get the education level entry with the maximum number of births
+    const maxBirthsEntry = educationLevels[maxBirthsLevelCode];
+  
+    // Draw a dot for the education level with the maximum number of births
+    const averageAge = maxBirthsEntry.averageAge;
+    const totalBirths = maxBirthsEntry.totalBirths;
+  
+    const x = xScale(averageAge);
+    const y = yScale(maxBirthsLevelCode);
+    const size = totalBirths / 2000; // Adjust for better visualization
+    const imgPath = `pictures/${state}.png`; // Path to the state picture
+    const circleRadius = size; // Radius of the circle
+  
+    // Create dot element with tooltip
+    const dot = svg.append("g")
+      .attr("class", "dot")
+      .attr("transform", `translate(${x},${y})`); // Move the group to the appropriate position
+  
+    // Append circle to the dot group for the black border
+    dot.append("circle")
+      .attr("r", circleRadius) // Set the radius of the circle
+      .style("fill", "none") // Set fill color to none
+      .style("stroke", "#193275") // Set border color to black
+      .style("stroke-width", 1); // Set border width
+  
+    dot.append("clipPath") // Create a clip path to make the image round
+      .attr("id", `clip-${state}`)
+      .append("circle")
+      .attr("cx", 0)
+      .attr("cy", 0)
+      .attr("r", circleRadius); // Set the radius of the clip path circle
+  
+    dot.append("image")
+    .attr("xlink:href", imgPath) // Set the href attribute to the image path
+    .attr("width", circleRadius * 2) // Adjust the size as needed
+    .attr("height", circleRadius * 2) // Adjust the size as needed
+    .attr("x", -circleRadius) // Center the image horizontally
+    .attr("y", -circleRadius) // Center the image vertically
+    .attr("clip-path", `url(#clip-${state})`) // Apply the clip path to the image
+    .on("mouseover", function() {
+        showBarChart(data, state, year, x, y);
+    }) // Show bar chart on mouseover
+    .on("mousemove", function() {
+        updateBarChartPosition(x, y);
+    }) // Update bar chart position on mousemove
+    .on("mouseout", function() {
+        hideBarChart();
+    }); // Hide bar chart on mouseout
+    
+    // Tooltip
+    dot.append("title")
+      .text(`State: ${state}\nEducation Level Code: ${maxBirthsLevelCode}\nAvarage age of Mother: ${averageAge}\nTotal Births: ${totalBirths}`);
+}
+let barChartCreated = false;
+// Function to show bar chart in tooltip
+function showBarChart(data, state, year, x, y) {
+
+
+	//createBarChart(data,year,state);
+	 if (barChartCreated) {
+        // If bar chart already exists, update its content with new data
+        updateBarChart(data, year, state);
+    } else {
+        // If bar chart doesn't exist, create it
+        createBarChart(data, year, state);
+        barChartCreated = true; // Set the flag to true after creating the bar chart
+    }
+}
+function updateBarChart(data, chosenYear, chosenState) {
+    d3.csv("birthfinal.csv").then(data => {
+		const margin = { top: 40, right: 20, bottom: 100, left: 60 }; // Increased top margin for title
+        const width = 600 - margin.left - margin.right;
+        const height = 450 - margin.top - margin.bottom;
+        // Filter data for the chosen state and year
+        const filteredData = data.filter(d => d.Year === chosenYear && d.State === chosenState);
+
+        // Convert Number_of_Births to numbers
+        filteredData.forEach(d => {
+            d.Number_of_Births = +d.Number_of_Births;
+        });
+
+        // Group data by education level and sum number of births
+        const aggregatedData = d3.rollups(
+            filteredData,
+            v => d3.sum(v, d => d.Number_of_Births),
+            d => d.Education_Level_Code
+        );
+
+        // Update scales based on the new data
+        const x = d3.scaleLinear()
+            .domain([0, d3.max(aggregatedData, d => d[1])])
+            .range([0, width]);
+
+        const y = d3.scaleBand()
+            .domain(aggregatedData.map(d => d[0]))
+            .range([0, height])
+            .padding(0.1);
+
+        // Select the existing SVG element
+        const svg = d3.select("#chart svg");
+
+		svg.select(".chart-title")
+			.text(chosenState);
+	
+        // Update bars
+        svg.selectAll(".bar")
+            .data(aggregatedData)
+            .transition()
+            .duration(500) // Set transition duration
+            .attr("y", d => y(d[0]))
+            .attr("width", d => x(d[1]))
+            .attr("height", y.bandwidth());
+
+        // Update y-axis
+        svg.select(".axis")
+            .transition()
+            .duration(500) // Set transition duration
+            .call(d3.axisLeft(y));
+
+		svg.select(".tooltip1")
+			.html(`
+                        <strong> Education Level: </strong> ${d[0]} <br>
+                        <strong>Number of Births: </strong> ${d[1]} 
+                    `);
+        
+			
+        // Update tooltip position
+        updateBarChartPosition(x, y);
+		
+		
+		
+    });
+}
+
+// Function to update bar chart position
+function updateBarChartPosition(x, y) {
+    // Update tooltip position
+    const tooltip = d3.select(".tooltip");
+    tooltip
+        .style("left", `${x}px`)
+        .style("top", `${y}px`);
+}
+
+// Function to hide bar chart
+function hideBarChart() {
+    // Remove tooltip
+    d3.select(".tooltip").remove();
+}
+
+function createBarChart(data, chosenYear, chosenState) {
+d3.csv("birthfinal.csv").then(data => {
+            // Filter data for Alabama state
+            const filterData = data.filter(d => (d.Year === chosenYear) && (d.State === chosenState));
+
+            // Convert Number_of_Births to numbers
+            filterData.forEach(d => {
+                d.Number_of_Births = +d.Number_of_Births;
+            });
+
+            // Group data by education level and sum number of births
+            const aggregatedData = d3.rollups(
+                filterData,
+                v => d3.sum(v, d => d.Number_of_Births),
+                d => d.Education_Level_Code
+            );
+
+            const margin = { top: 40, right: 20, bottom: 100, left: 60 }; // Increased top margin for title
+            const width = 600 - margin.left - margin.right;
+            const height = 450 - margin.top - margin.bottom;
+
+            const x = d3.scaleLinear()
+                .domain([0, d3.max(aggregatedData, d => d[1])])
+                .range([0, width]);
+
+            const y = d3.scaleBand()
+                .domain(aggregatedData.map(d => d[0]))
+                .range([0, height])
+                .padding(0.1);
+
+            const svg = d3.select("#chart")
+                .append("svg")
+                .attr("width", width + margin.left + margin.right)
+                .attr("height", height + margin.top + margin.bottom)
+                .append("g")
+                .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+            svg.selectAll(".bar")
+                .data(aggregatedData)
+                .enter().append("rect")
+                .attr("class", "bar")
+                .attr("x", 0)
+                .attr("y", d => y(d[0]))
+                .attr("width", d => x(d[1]))
+                .attr("height", y.bandwidth())
+                .attr("fill", "#193275");
+
+            svg.append("g")
+                .attr("class", "axis")
+                .call(d3.axisLeft(y));
+
+            svg.append("g")
+                .attr("class", "axis")
+                .attr("transform", "translate(0," + height + ")")
+                .call(d3.axisBottom(x));
+
+            // Title for x axis
+            svg.append("text")
+                .attr("text-anchor", "middle")
+                .attr("x", width / 2)
+                .attr("y", height + margin.top + 5) // Adjusted positioning
+                .text("Amount of Births");
+
+            // Title for y axis
+            svg.append("text")
+                .attr("text-anchor", "middle")
+                .attr("transform", "rotate(-90)")
+                .attr("y", -margin.left + 30) // Adjusted positioning
+                .attr("x", -height / 2)
+                .text("Level of Education");
+
+            // Title for the chart
+            svg.append("text")
+                .attr("text-anchor", "middle")
+				.attr("class", "chart-title")
+                .attr("x", width / 2)
+                .attr("y", -margin.top / 3) // Positioned above the chart
+                .attr("font-size", "24px") // Adjust font size as needed
+                .text(chosenState);
+
+            const tooltip = d3.select("body")
+                .append("div")
+                .attr("class", "tooltip1");
+
+            const onMouseOver = (event, d) => {
+                const [x, y] = d3.pointer(event);
+                tooltip
+                    .style("left", (event.pageX + 10) + "px")
+                    .style("top", (event.pageY - 40) + "px")
+                    .style("opacity", 1)
+                    .html(`
+                        <strong> Education Level: </strong> ${d[0]} <br>
+                        <strong>Number of Births: </strong> ${d[1]} 
+                    `);
+            };
+
+            const onMouseOut = () => {
+                tooltip.style("opacity", 0);
+            };
+
+            svg.selectAll(".bar")
+                .on("mouseover", onMouseOver)
+                .on("mouseout", onMouseOut);
+        });
+    }
+// Add event listeners to radio buttons
+    document.querySelectorAll('input[name="year"]').forEach(radio => {
+        radio.addEventListener('change', () => {
+            const selectedYear = document.querySelector('input[name="year"]:checked').value;
+            updateScatterPlot(selectedYear); // Call function to update scatter plot with selected year
+        });
+    });
+
+    // Function to update scatter plot with selected year
+    function updateScatterPlot(selectedYear) {
+        d3.csv('birthfinal.csv').then(data => {
+            const states = Array.from(new Set(data.map(row => row['State'])));
+			d3.select('#scatterPlot svg').selectAll('.dot').remove();
+            states.forEach(state => {
+                drawDotInScatterPlot(data, selectedYear, state); // Draw scatter plot for each state in the selected year
+            });
+        });
+    }
+	
+// Load CSV data and draw scatter plot for each state
+d3.csv('birthfinal.csv').then(data => {
+  createAxisScatterPlot(); // Create axes for the scatter plot.
+  showStatePictures(data);
+  createDictionary();
+  const states = Array.from(new Set(data.map(row => row['State']))); // Extract unique states
+  states.forEach(state => {
+    drawDotInScatterPlot(data,'2016',state); // Draw scatter plot for each state in 2016
+  });
+});
+
+
+</script>
+</body>
+</html>
